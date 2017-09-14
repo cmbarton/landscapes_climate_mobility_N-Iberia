@@ -1,0 +1,304 @@
+---
+title: "Supplementary Information"
+
+subtitle: "LANDSCAPES, CLIMATE CHANGE & FORAGER MOBILITY IN THE UPPER PALEOLITHIC OF NORTHERN SPAIN"
+
+author: Geoffrey A Clark, C Michael Barton, & Lawrence G Straus
+
+date: 'Last Updated: `r Sys.Date()`'
+
+mainfont: Times New Roman
+monofont: Monaco
+geometry: margin=1in
+fontsize: 12pt
+output:
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_depth: 3
+    toc_float: true
+---
+  
+  
+  
+This workflow is the output for an R Markdown script that performed all analyses used in the paper entitled **Landscapes, climate change & forager mobility in the Upper Paleolithic of northern Spain** (GA Clark corresponding author), submitted to _Quaternary International_, 2017. 
+
+This R Markdown script requires R data files for the lithic assemblages and radiocarbon dates, as well as a several R packages not included in the base distribution. These are all loaded by the Setup chunk below. 
+  
+The complete dataset and the R Markdown script that produced this document can be downloaded at: _[URL for GitHub/Zenodo repository]_
+  
+This dataset should be cited as follows:  
+  
+_[Data citation goes here after obtaining DOI Zenodo]_
+  
+
+##Setup
+Load files and libraries
+```{r message=FALSE}
+# R libraries needed
+require(ggplot2)
+require(ggthemes)
+require(dplyr)
+require(Bchron)
+require(viridis)
+require(readr)
+
+# Load files needed
+load(file="nwiberia_lithics.rda")
+load(file="nwiberia_dates.rda")
+load(file="ice_cores.rda")
+
+# Set factor levels ... just in case
+nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("EUP", "Solutrean", "LM Magdalenian", "U Magdalenian", "Azilian", "Asturian"))
+```
+  
+## **Figure 1** Is a map of sites created in GRASS GIS. Straightline distances to the modern and LGM coastlines were calculated using standard GIS tools (v.distance moduled in GRASS)
+  
+## **Figure 2:** Retouch Frequency by period (regions combined)  
+(1000 x 600 image)  
+\
+```{r retouch by period, warning=FALSE, fig.width=9, fig.height=6}
+#ANOVA
+
+fit <- aov(formula = retouch.freq~period, data = subset(nwiberia.lithics, total.ret>0 & period != "Asturian"))
+
+anovainfo <- paste("ANOVA: ", "F =", round(summary(fit)[[1]]$`F value`[[1]], digits=4), " p =", round(summary(fit)[[1]]$`Pr(>F)`[1], digits=5))
+
+ggplot(subset(nwiberia.lithics, total.lithics>0 & period != "Asturian")) + 
+  geom_boxplot(aes(x=period, y=retouch.freq), fill = "grey90", outlier.shape = NA, notch = F)  + 
+  geom_jitter(aes(x=period, y=retouch.freq), size=I(3), width=.2) + 
+  labs(x="period", y="retouch frequency\n") + 
+  theme_bw(base_size = 20) + 
+  guides(fill=FALSE) + 
+  annotate("text", x=.7, y=.55, label=anovainfo, size=5, hjust = 0)
+
+
+```
+  
+  
+  
+## **Figure 3:** All assemblages: distance to modern coast vs elevation vs retouch frequency by period  
+(800 x 1200 image)  
+  
+```{r distance to coast vs. elevation by period, warning=FALSE, message=FALSE, fig.width=6, fig.height=9}
+
+# Change factor levels for this plot
+nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("Asturian", "Azilian", "U Magdalenian", "LM Magdalenian", "Solutrean", "EUP"))
+
+retouch <- subset(nwiberia.lithics, retouch.freq>0)$retouch.freq<=.1
+
+ggplot() + 
+  geom_point(data=subset(nwiberia.lithics, retouch.freq>0), aes(y=elev.modern, x=dist.coast.modern, size=retouch.freq, color=cut(retouch.freq, breaks=c(0,.1,.61), labels = c('expedient', 'curated'), include.lowest = T)), shape=1)  +
+  geom_point(data=subset(nwiberia.lithics, is.na(retouch.freq)), aes(y=elev.modern, x=dist.coast.modern), size=1, color='grey50') +
+  xlim(c(0,40)) +
+  labs(y="\nelevation (m)", x="distance from modern coast (km)\n", color=c('curation'), size='retouch\nfrequency') +
+  scale_size_continuous(breaks = c(0, 0.1, 0.2, 0.6), range = c(.5, 10)) +
+  scale_color_manual(values = c('expedient'='red', 'curated'='blue')) +
+  theme_bw(base_size = 18) + facet_wrap(~period, ncol = 1, strip.position = 'right')
+
+# Restor factor levels to default
+nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("EUP", "Solutrean", "LM Magdalenian", "U Magdalenian", "Azilian", "Asturian"))
+```  
+
+  
+## **Figure 4:**  SPD for each U Paleolithic industry   
+(1200 x 600 for each image)  
+
+```{r Aurignacian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+aurignacian.spd <- with(nwiberia.dates[grep("Aurignacian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+
+title <- paste("Aurignacian (N = ", nrow(nwiberia.dates[grep("Aurignacian", nwiberia.dates$attribution), ]), ")" )
+
+plot(aurignacian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
+```
+  
+  
+```{r Gravettian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+gravettian.spd <- with(nwiberia.dates[grep("Gravettian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+
+title <- paste("Gravettian (N = ", nrow(nwiberia.dates[grep("Gravettian", nwiberia.dates$attribution), ]), ")" )
+
+plot(gravettian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
+```
+    
+  
+```{r Solutrean SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+solutrean.spd <- with(nwiberia.dates[grep("Solutrean", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+
+title <- paste("Solutrean (N = ", nrow(nwiberia.dates[grep("Solutrean", nwiberia.dates$attribution), ]), ")" )
+
+plot(solutrean.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
+```
+  
+  
+```{r Magdalenian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+magdalenian.spd <- with(nwiberia.dates[grep("Magdalenian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+
+title <- paste("Magdalenian (N = ", nrow(nwiberia.dates[grep("Magdalenian", nwiberia.dates$attribution), ]), ")" )
+
+plot(magdalenian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
+```
+    
+  
+```{r Azilian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+azilian.spd <- with(nwiberia.dates[grep("Azilian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+
+title <- paste("Azilian (N = ", nrow(nwiberia.dates[grep("Azilian", nwiberia.dates$attribution), ]), ")" )
+
+plot(azilian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
+```
+  
+  
+```{r Mesolithic SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+mesolithic.spd <- with(nwiberia.dates[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+
+title <- paste("Mesolithic (N = ", nrow(nwiberia.dates[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates$attribution), ]), ")" )
+
+plot(mesolithic.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
+```  
+  
+  
+## **Figure 5:**  SPD for each U Paleolithic industry combined into a single graph (1200 x 800 image)
+  
+  
+```{r all industries SPD graph, warning=FALSE, message=FALSE, results="hide", fig.width=10, fig.height=6}
+
+#first reduce number of points plotted so that line types can be seen
+a.spd <- data.frame(densities=aurignacian.spd$densities, ageGrid=aurignacian.spd$ageGrid)
+a.spd.sample<-a.spd[ sample(which(a.spd$ageGrid>=0), nrow(a.spd)/10, replace = F ), ]
+
+g.spd <- data.frame(densities=gravettian.spd$densities, ageGrid=gravettian.spd$ageGrid)
+g.spd.sample<-g.spd[ sample(which(g.spd$ageGrid>=0), nrow(g.spd)/10, replace = F ), ]
+
+s.spd <- data.frame(densities=solutrean.spd$densities, ageGrid=solutrean.spd$ageGrid)
+s.spd.sample<-s.spd[ sample(which(s.spd$ageGrid>=0), nrow(s.spd)/10, replace = F ), ]
+
+m.spd <- data.frame(densities=magdalenian.spd$densities, ageGrid=magdalenian.spd$ageGrid)
+m.spd.sample<-m.spd[ sample(which(m.spd$ageGrid>=0), nrow(m.spd)/10, replace = F ), ]
+  
+az.spd <- data.frame(densities=azilian.spd$densities, ageGrid=azilian.spd$ageGrid)
+az.spd.sample<-az.spd[ sample(which(az.spd$ageGrid>=0), nrow(az.spd)/10, replace = F ), ]
+
+ml.spd <- data.frame(densities=mesolithic.spd$densities, ageGrid=mesolithic.spd$ageGrid)
+ml.spd.sample<-ml.spd[ sample(which(ml.spd$ageGrid>=0), nrow(ml.spd)/10, replace = F ), ]
+
+# Get a subset of ice core data
+NWIb.ice.cores <- subset(ice.cores, years.BP<=45000 & years.BP>=5000)
+
+# Now we can plot the curves
+ggplot() + 
+  geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=(d18O.GISP2.ppt+47)*.00008, color='gisp2', lty='gisp2', size='gisp2', alpha='gisp2'), method='loess', span=.1, se=FALSE) + 
+  geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=(d18O.NGRIP2.ppt+47)*.00008, color='ngrip2', lty='ngrip2', size='ngrip2', alpha='ngrip2'), method='loess', span=.1, se=FALSE)  + 
+  geom_line(aes(x=a.spd.sample$ageGrid, y=a.spd.sample$densities, color='a', linetype='a', size='a', alpha='a'))  + 
+  geom_line(aes(x=g.spd.sample$ageGrid, y=g.spd.sample$densities, color='g', linetype='g', size='g', alpha='g'))  + 
+  geom_line(aes(x=s.spd.sample$ageGrid, y=s.spd.sample$densities, color='s', linetype='s', size='s', alpha='s'))  + 
+  geom_line(aes(x=m.spd.sample$ageGrid, y=m.spd.sample$densities, color='m', linetype='m', size='m', alpha='m'))  + 
+  geom_line(aes(x=az.spd.sample$ageGrid, y=az.spd.sample$densities, color='az', linetype='az', size='az', alpha='az')) + 
+  geom_line(aes(x=ml.spd.sample$ageGrid, y=ml.spd.sample$densities, color='ml', linetype='ml', size='ml', alpha='ml')) +
+  scale_colour_manual(name=NULL, values =c('a'='grey70', 'g'='grey70', 's'='grey70',  'm'='black', 'az'='black', 'ml'='black', 'gisp2'='red', 'ngrip2'='blue'), breaks=c('a','g','s', 'm','az','ml', 'gisp2', 'ngrip2'), labels = c('Aurignacian  ', 'Gravettian  ','Solutrean  ', 'Magdalenian  ', 'Azilian  ', 'Mesolithic ', 'gisp2', 'ngrip2')) + 
+  scale_linetype_manual(name=NULL, values =c('a'='dashed', 'g'='dotted', 's'='solid',  'm'='dashed', 'az'='dotted', 'ml'='solid', 'gisp2'='dashed', 'ngrip2'='dashed'), breaks=c('a','g','s', 'm','az','ml', 'gisp2', 'ngrip2'), labels = c('Aurignacian  ', 'Gravettian  ','Solutrean  ', 'Magdalenian  ', 'Azilian  ', 'Mesolithic ', 'gisp2', 'ngrip2')) +
+  scale_size_manual(name=NULL, values =c('a'=1, 'g'=1, 's'=1, 'm'=1, 'az'=1, 'ml'=1, 'gisp2'=1, 'ngrip2'=1), breaks=c('a','g','s', 'm','az','ml', 'gisp2', 'ngrip2'), labels = c('Aurignacian  ', 'Gravettian  ','Solutrean  ', 'Magdalenian  ', 'Azilian  ', 'Mesolithic ', 'gisp2', 'ngrip2')) +
+  scale_alpha_manual(name=NULL, values=c('a'=1, 'g'=1, 's'=1, 'm'=1, 'az'=1, 'ml'=1, 'gisp2'=.5, 'ngrip2'=.5), breaks=c('a','g','s', 'm','az','ml', 'gisp2', 'ngrip2'), labels = c('Aurignacian  ', 'Gravettian  ','Solutrean  ', 'Magdalenian  ', 'Azilian  ', 'Mesolithic ', 'gisp2', 'ngrip2')) +
+  scale_x_continuous(limits = c(45000,8000), trans = "reverse") + 
+  labs(x = "\ncalibrated years BP", y = "summed probability density\nand rescaled delta 18O\n") + 
+  theme_bw(base_size = 20) + theme(legend.position="bottom", legend.key.size = unit(35, "points"))
+```
+  
+  
+## C14 Calibration and SPD Analyses for all of NW Iberia
+  
+  
+Below are data filtering routines use to merge multiple dates for single proveniences. Dates with high uncertainty (CV>0.05) have already been removed from the dataset.
+  
+#### Data preparation
+  
+Average means and SD for proveniences with multiple dates  
+Eliminate all dates where CV for uncalibrated date >0.05 (90th percentile)
+\
+```{r create c14dates.agg, warning=FALSE, message=FALSE}
+c14.aggdates <- with(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), aggregate(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), by = list(site.prov), FUN = mean))
+
+nwiberia.dates.agg <- with(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), aggregate(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), by = list(site.prov), FUN = first))
+
+nwiberia.dates.agg$C14.mean <- round(c14.aggdates$C14.mean)
+nwiberia.dates.agg$C14.sd <- round(c14.aggdates$C14.sd)
+rm(c14.aggdates)
+```
+  
+  
+#### Calibrate dates for use with assemblages if desired
+  
+```{r calibrate dates, warning=FALSE, message=FALSE}
+require(Bchron)
+
+c14calib.agg <- with(nwiberia.dates.agg, BchronCalibrate(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve))
+
+nwiberia.dates.agg$BP.cal.median <- sapply(1:length(c14calib.agg), function(x) round(median(c14calib.agg[[x]]$ageGrid) ))
+```
+  
+  
+## **Figure 6:** SPD of entire NW Iberia region with superimposed ice core LOESS curves    
+(1200 x 800 image)  
+  
+```{r combined data SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+NWIb.dens <- with(nwiberia.dates.agg, BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 30, store_density=TRUE))
+```
+  
+  
+```{r combined data SPD graph, warning=FALSE, message=FALSE, results="hide", fig.width=10, fig.height=6}
+NWIb.ice.cores <- subset(ice.cores, years.BP<=45000 & years.BP>=5000)
+
+ggplot() + 
+  geom_line(aes(x=NWIb.dens$ageGrid, y=NWIb.dens$densities, color='age', lty='age'), lwd = 1) + 
+  geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=d18O.GISP2.ppt*.00001+.0005, color='gisp2', lty='gisp2'), method='loess', span=.1, se=FALSE) + 
+  geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=d18O.NGRIP2.ppt*.00001+.0005, color='ngrip2', lty='ngrip2'), method='loess', span=.1, se=FALSE)  + 
+  scale_colour_manual(name=NULL, values =c('age'='black','gisp2'='red','ngrip2'='blue'), labels = c('summed radiocarbon probability density  ', 'GISP2 rescaled  ','NGRIP2 rescaled')) + 
+  scale_linetype_manual(name=NULL, values = c('age'='solid', 'gisp2'='dashed', 'ngrip2'='dashed'), labels = c('summed radiocarbon probability density  ', 'GISP2 rescaled  ','NGRIP2 rescaled')) +
+  scale_x_continuous(limits = c(45000,8000), trans = "reverse") + 
+  geom_vline(xintercept = c(11000,13500,20000,24000,34000,42000), lty='dashed', lwd=0.3) + 
+  labs(x = "\ncalibrated years BP", y = "summed probability density\nand rescaled delta 18O\n") + 
+  theme_bw(base_size = 20) + theme(legend.position="bottom", legend.key.size = unit(30, "points")) + 
+  annotate("text", x=45000, y=.00002, label = paste("N = ", nrow(nwiberia.dates.agg)), size=5, hjust = 0.3, vjust=1.0)
+```
+  
+*Note:* Ice core curves are derived from datasets accompanying the two following papers.   
+
+Rasmussen, S.O., Bigler, M., Blockley, S.P., Blunier, T., Buchardt, S.L., Clausen, H.B., Cvijanovic, I., Dahl-Jensen, D., Johnsen, S.J., Fischer, H., Gkinis, V., Guillevic, M., Hoek, W.Z., Lowe, J.J., Pedro, J.B., Popp, T., Seierstad, I.K., Steffensen, J.P., Svensson, A.M., Vallelonga, P., Vinther, B.M., Walker, M.J.C., Wheatley, J.J., Winstrup, M., 2014. A stratigraphic framework for abrupt climatic changes during the Last Glacial period based on three synchronized Greenland ice-core records: refining and extending the INTIMATE event stratigraphy. _Quaternary Science Reviews_ 106, 14-28.
+
+Seierstad, I.K., Abbott, P.M., Bigler, M., Blunier, T., Bourne, A.J., Brook, E., Buchardt, S.L., Buizert, C., Clausen, H.B., Cook, E., Dahl-Jensen, D., Davies, S.M., Guillevic, M., Johnsen, S.J., Pedersen, D.S., Popp, T.J., Rasmussen, S.O., Severinghaus, J.P., Svensson, A., Vinther, B.M., 2014. Consistently dated records from the Greenland GRIP, GISP2 and NGRIP ice cores for the past 104 ka reveal regional millennial-scale δ18O gradients with possible Heinrich event imprint. _Quaternary Science Reviews_ 106, 29-46.
+  
+  
+## Data management routines (optional)
+  
+These are some additional data management routines used to create csv files for other analyses like plotting on maps.  
+  
+#### Create file of sites only and save to CSV (e.g., for GIS input)  
+  
+```{r}
+#library(reshape)
+#nwiberia.sites.sum <- aggregate(nwiberia.lithics[,c(6,8,9)], by = list(nwiberia.lithics$site), FUN="sum")
+#nwiberia.sites.max <- aggregate(nwiberia.lithics[,15:19], by = list(nwiberia.lithics$site), FUN="max")
+#nwiberia.sites <- cbind(nwiberia.sites.sum, nwiberia.sites.max[,2:6])
+#nwiberia.sites <- rename(nwiberia.sites, c("Group.1" = "sites"))
+#write.csv(nwiberia.sites, file="nwiberia_sites.csv")
+```
+  
+  
+#### Output R data files. This is only needed if changes are made to the data files that need to be saved for future use.  
+
+```{r}
+#save(nwiberia.dates, file = "nwiberia_dates.rda")
+#save(nwiberia.lithics, file="nwiberia_lithics.rda")
+```
+  
+  
+#### Set factor levels  
+
+If raw csv files are input, instead of R data files, it is necessary to set factor levels for time periods and geographic subregions so that all data plot correctly
+
+```{r}
+#nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("EUP", "Solutrean", "LM Magdalenian", "U Magdalenian", "Azilian", "Asturian"))
+```
