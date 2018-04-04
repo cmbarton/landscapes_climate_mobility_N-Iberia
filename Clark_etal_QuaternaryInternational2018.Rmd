@@ -58,18 +58,19 @@ nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("EUP", "Solu
 ## **Figure 1** Is a map of sites created in GRASS GIS. Straightline distances to the modern and LGM coastlines were calculated using standard GIS tools (v.distance moduled in GRASS)
   
 ## **Figure 2:** Retouch Frequency by period (regions combined)  
-(1000 x 600 image)  
+(1200 x 600 image)  
 \
-```{r retouch by period, warning=FALSE, fig.width=9, fig.height=6}
+```{r retouch by period, warning=FALSE, fig.width=9, fig.height=5}
 #ANOVA
 
-fit <- aov(formula = retouch.freq~period, data = subset(nwiberia.lithics, total.ret>0 & period != "Asturian"))
+fit <- aov(formula = retouch.freq~period, data = subset(nwiberia.lithics, total.ret>0))
 
 anovainfo <- paste("ANOVA: ", "F =", round(summary(fit)[[1]]$`F value`[[1]], digits=4), " p =", round(summary(fit)[[1]]$`Pr(>F)`[1], digits=5))
 
-ggplot(subset(nwiberia.lithics, total.lithics>0 & period != "Asturian")) + 
+ggplot(subset(nwiberia.lithics, period != 'Asturian')) + 
   geom_boxplot(aes(x=period, y=retouch.freq), fill = "grey90", outlier.shape = NA, notch = F)  + 
-  geom_jitter(aes(x=period, y=retouch.freq), size=I(3), width=.2) + 
+  geom_jitter(aes(x=period, y=retouch.freq, color=Ib.b), size=I(3), width=.2) + 
+  scale_color_viridis(option = 'plasma') +
   labs(x="period", y="retouch frequency\n") + 
   theme_bw(base_size = 20) + 
   guides(fill=FALSE) + 
@@ -107,7 +108,8 @@ nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("EUP", "Solu
 ## **Figure 4:**  SPD for each U Paleolithic industry   
 (1200 x 600 for each image)  
 
-```{r Aurignacian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+```{r Aurignacian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
+
 aurignacian.spd <- with(nwiberia.dates[grep("Aurignacian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
 
 title <- paste("Aurignacian (N = ", nrow(nwiberia.dates[grep("Aurignacian", nwiberia.dates$attribution), ]), ")" )
@@ -116,7 +118,7 @@ plot(aurignacian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP"
 ```
   
   
-```{r Gravettian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+```{r Gravettian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
 gravettian.spd <- with(nwiberia.dates[grep("Gravettian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
 
 title <- paste("Gravettian (N = ", nrow(nwiberia.dates[grep("Gravettian", nwiberia.dates$attribution), ]), ")" )
@@ -125,7 +127,7 @@ plot(gravettian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP",
 ```
     
   
-```{r Solutrean SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+```{r Solutrean SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
 solutrean.spd <- with(nwiberia.dates[grep("Solutrean", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
 
 title <- paste("Solutrean (N = ", nrow(nwiberia.dates[grep("Solutrean", nwiberia.dates$attribution), ]), ")" )
@@ -134,7 +136,7 @@ plot(solutrean.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", 
 ```
   
   
-```{r Magdalenian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+```{r Magdalenian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
 magdalenian.spd <- with(nwiberia.dates[grep("Magdalenian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
 
 title <- paste("Magdalenian (N = ", nrow(nwiberia.dates[grep("Magdalenian", nwiberia.dates$attribution), ]), ")" )
@@ -143,7 +145,7 @@ plot(magdalenian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP"
 ```
     
   
-```{r Azilian SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+```{r Azilian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
 azilian.spd <- with(nwiberia.dates[grep("Azilian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
 
 title <- paste("Azilian (N = ", nrow(nwiberia.dates[grep("Azilian", nwiberia.dates$attribution), ]), ")" )
@@ -152,7 +154,7 @@ plot(azilian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xl
 ```
   
   
-```{r Mesolithic SPD calculation, warning=FALSE, message=FALSE, results="hide"}
+```{r Mesolithic SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
 mesolithic.spd <- with(nwiberia.dates[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
 
 title <- paste("Mesolithic (N = ", nrow(nwiberia.dates[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates$attribution), ]), ")" )
@@ -164,7 +166,7 @@ plot(mesolithic.spd, plotDates =T,  col="red", xlab="age - calibrated years BP",
 ## **Figure 5:**  SPD for each U Paleolithic industry combined into a single graph (1200 x 800 image)
   
   
-```{r all industries SPD graph, warning=FALSE, message=FALSE, results="hide", fig.width=10, fig.height=6}
+```{r all industries SPD graph, warning=FALSE, message=FALSE, results="hide", fig.width=9, fig.height=6}
 
 #first reduce number of points plotted so that line types can be seen
 a.spd <- data.frame(densities=aurignacian.spd$densities, ageGrid=aurignacian.spd$ageGrid)
@@ -188,7 +190,7 @@ ml.spd.sample<-ml.spd[ sample(which(ml.spd$ageGrid>=0), nrow(ml.spd)/10, replace
 # Get a subset of ice core data
 NWIb.ice.cores <- subset(ice.cores, years.BP<=45000 & years.BP>=5000)
 
-# Now we can plot the curves
+# Now we can plot the curves together
 ggplot() + 
   geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=(d18O.GISP2.ppt+47)*.00008, color='gisp2', lty='gisp2', size='gisp2', alpha='gisp2'), method='loess', span=.1, se=FALSE) + 
   geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=(d18O.NGRIP2.ppt+47)*.00008, color='ngrip2', lty='ngrip2', size='ngrip2', alpha='ngrip2'), method='loess', span=.1, se=FALSE)  + 
@@ -248,7 +250,7 @@ NWIb.dens <- with(nwiberia.dates.agg, BchronDensity(ages = C14.mean, ageSds = C1
 ```
   
   
-```{r combined data SPD graph, warning=FALSE, message=FALSE, results="hide", fig.width=10, fig.height=6}
+```{r combined data SPD graph, warning=FALSE, message=FALSE, results="hide", fig.width=9, fig.height=6}
 NWIb.ice.cores <- subset(ice.cores, years.BP<=45000 & years.BP>=5000)
 
 ggplot() + 
