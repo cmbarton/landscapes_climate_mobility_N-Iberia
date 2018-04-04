@@ -15,6 +15,8 @@ Clark_etal_QuaternaryInternational2018.Rmd [R Markdown Scripts for R version 3.4
 nwiberia_lithics.csv [database of lithic asssemblages for the Upper Paleolithic through Mesolithic of Northern Iberia in csv text format]nwiberia_lithics.rda [database of lithic asssemblages for the Upper Paleolithic through Mesolithic of Northern Iberia in R data format]
 
 
+
+
 Michael Barton
 Arizona State University
 2018
