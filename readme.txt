@@ -4,7 +4,7 @@ GA Clark, CM Barton, and LG Straus (2018) Landscapes, Climate Change & Forager M
 
 This data and analysis package should be cited as:
 
-XXXXXX
+Barton, C.M., Clark, G.A., Straus, L.G., 2018. Landscapes_climate_mobility_N-Iberia. https://zenodo.org/record/[zenodo DOI number].
 
 You are welcome to use these data in scientific research but you should cite both the paper and this dataset. 
 
