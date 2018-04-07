@@ -14,7 +14,7 @@ Clark_etal_QuaternaryInternational2018.Rmd [R Markdown Scripts for R version 3.4
 nwiberia_dates.csv [database of C14 date for the Upper Paleolithic through Mesolithic of Northern Iberia in csv text format]nwiberia_dates.rda [database of C14 date for the Upper Paleolithic through Mesolithic of Northern Iberia in R data format]
 nwiberia_lithics.csv [database of lithic asssemblages for the Upper Paleolithic through Mesolithic of Northern Iberia in csv text format]nwiberia_lithics.rda [database of lithic asssemblages for the Upper Paleolithic through Mesolithic of Northern Iberia in R data format]
 
-We were unable to receive permission by the time of publication of the QI paper to publish data we used from level 15 of Mirón. You will need to contact the excavator for these data: Manuel Gonzales Morales, Universidad de Cantabria. 
+We were unable to receive permission by the time of publication of the QI paper to publish data we used from level 15 of Mirón. You will need to contact one of the excavators for these data: Manuel Gonzales Morales, Universidad de Cantabria or Lawrence Straus, University of New Mexico. 
 
 ice_cores.csv [NGRIP2 and GISP2 ice core data from Greenland in csv text format]
 ice_cores.rda [NGRIP2 and GISP2 ice core data from Greenland in R data format]
