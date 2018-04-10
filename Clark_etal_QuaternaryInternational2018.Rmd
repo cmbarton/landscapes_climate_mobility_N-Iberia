@@ -1,7 +1,7 @@
 ---
-title: "Supplementary Information"
+title: "METHODS"
 
-subtitle: "LANDSCAPES, CLIMATE CHANGE & FORAGER MOBILITY IN THE UPPER PALEOLITHIC OF NORTHERN SPAIN"
+subtitle: "Supplementary Information for: Landscapes, Climate Change & Forager Mobility in the Upper Paleolithic of Northern Spain"
 
 author: Geoffrey A Clark, C Michael Barton, & Lawrence G Straus
 
@@ -24,15 +24,16 @@ output:
   
   
   
-This workflow is the output for an R Markdown script that performed all analyses used in the paper entitled **Landscapes, climate change & forager mobility in the Upper Paleolithic of northern Spain** (GA Clark corresponding author), submitted to _Quaternary International_, 2017. 
+This workflow is the output for an R Markdown script that performed all analyses used in the paper entitled **Landscapes, climate change & forager mobility in the Upper Paleolithic of northern Spain** (GA Clark corresponding author), submitted to _Quaternary International_, 2018. 
 
-This R Markdown script requires R data files for the lithic assemblages and radiocarbon dates, as well as a several R packages not included in the base distribution. These are all loaded by the Setup chunk below. 
+This R Markdown script requires R data files for the lithic assemblages and radiocarbon dates, as well as a several R packages not included in the base distribution. These are all loaded by the 'setup' chunk below. 
   
-The complete dataset and the R Markdown script that produced this document can be downloaded at: _[URL for GitHub/Zenodo repository]_
+The complete dataset and the R Markdown script that produced this document can be downloaded at: https://zenodo.org/record/1214794 (DOI: 10.5281/zenodo.1214794)
   
 This dataset should be cited as follows:  
   
-_[Data citation goes here after obtaining DOI Zenodo]_
+_Barton, C.M., Clark, G.A., Straus, L.G., 2018. Upper Paleolithic of N Spain - Lithic and C14 Data and Analysis. doi:10.5281/zenodo.1214794
+_
   
 
 ##Setup
@@ -71,7 +72,7 @@ ggplot(subset(nwiberia.lithics, period != 'Asturian')) +
   geom_boxplot(aes(x=period, y=retouch.freq), fill = "grey90", outlier.shape = NA, notch = F)  + 
   geom_jitter(aes(x=period, y=retouch.freq, color=Ib.b), size=I(3), width=.2) + 
   scale_color_viridis(option = 'plasma') +
-  labs(x="period", y="retouch frequency\n") + 
+  labs(x="period", y="retouch frequency\n", color="backed\nbladelet\nindex\n") + 
   theme_bw(base_size = 20) + 
   guides(fill=FALSE) + 
   annotate("text", x=.7, y=.55, label=anovainfo, size=5, hjust = 0)
@@ -91,9 +92,9 @@ nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("Asturian", 
 
 retouch <- subset(nwiberia.lithics, retouch.freq>0)$retouch.freq<=.1
 
-ggplot() + 
-  geom_point(data=subset(nwiberia.lithics, retouch.freq>0), aes(y=elev.modern, x=dist.coast.modern, size=retouch.freq, color=cut(retouch.freq, breaks=c(0,.1,.61), labels = c('expedient', 'curated'), include.lowest = T)), shape=1)  +
-  geom_point(data=subset(nwiberia.lithics, is.na(retouch.freq)), aes(y=elev.modern, x=dist.coast.modern), size=1, color='grey50') +
+ggplot(subset(nwiberia.lithics, retouch.freq>0 & period != 'Asturian')) + 
+  geom_point(aes(y=elev.modern, x=dist.coast.modern, size=retouch.freq, color=cut(retouch.freq, breaks=c(0,.1,.61), labels = c('expedient', 'curated'), include.lowest = T)), shape=1)  +
+  geom_point(data=subset(nwiberia.lithics, is.na(retouch.freq) & period != 'Asturian'), aes(y=elev.modern, x=dist.coast.modern), size=1, color='grey50') +
   xlim(c(0,40)) +
   labs(y="\nelevation (m)", x="distance from modern coast (km)\n", color=c('curation'), size='retouch\nfrequency') +
   scale_size_continuous(breaks = c(0, 0.1, 0.2, 0.6), range = c(.5, 10)) +
@@ -105,59 +106,97 @@ nwiberia.lithics$period <- factor(nwiberia.lithics$period, levels=c("EUP", "Solu
 ```  
 
   
+## C14 Calibration and SPD Analyses for all of NW Iberia
+  
+  
+Below are data filtering routines use to merge multiple dates for single proveniences. Dates with high uncertainty (CV>0.05) have already been removed from the dataset.
+  
+#### Data preparation
+  
+Average means and SD for proveniences with multiple dates  
+Eliminate all dates where CV for uncalibrated date >0.05 (90th percentile) and dates on UP art
+\
+```{r create c14dates.agg, warning=FALSE, message=FALSE}
+c14.aggdates <- with(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & !(attribution %in% c("LUP art", "LUP art (Solutrean?)")))), aggregate(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & !(attribution %in% c("LUP art", "LUP art (Solutrean?)")))), by = list(site.prov), FUN = mean))
+
+nwiberia.dates.agg <- with(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & !(attribution %in% c("LUP art", "LUP art (Solutrean?)")))), aggregate(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & !(attribution %in% c("LUP art", "LUP art (Solutrean?)")))), by = list(site.prov), FUN = first))
+
+nwiberia.dates.agg$C14.mean <- round(c14.aggdates$C14.mean)
+nwiberia.dates.agg$C14.sd <- round(c14.aggdates$C14.sd)
+rm(c14.aggdates)
+```
+  
+  
+#### Calibrate dates for use with assemblages if desired
+  
+```{r calibrate dates, warning=FALSE, message=FALSE}
+require(Bchron)
+
+c14calib.agg <- with(nwiberia.dates.agg, BchronCalibrate(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve))
+
+nwiberia.dates.agg$BP.cal.median <- sapply(1:length(c14calib.agg), function(x) round(median(c14calib.agg[[x]]$ageGrid) ))
+```
+  
+  
 ## **Figure 4:**  SPD for each U Paleolithic industry   
 (1200 x 600 for each image)  
 
+####Figure 4a
 ```{r Aurignacian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
 
-aurignacian.spd <- with(nwiberia.dates[grep("Aurignacian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+aurignacian.spd <- with(nwiberia.dates.agg[grep("Aurignacian", nwiberia.dates.agg$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 10, store_density=TRUE))
 
-title <- paste("Aurignacian (N = ", nrow(nwiberia.dates[grep("Aurignacian", nwiberia.dates$attribution), ]), ")" )
+title <- paste("Aurignacian (N = ", nrow(nwiberia.dates.agg[grep("Aurignacian", nwiberia.dates.agg$attribution), ]), ")" )
 
 plot(aurignacian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
 ```
   
   
+####Figure 4b  
 ```{r Gravettian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
-gravettian.spd <- with(nwiberia.dates[grep("Gravettian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+gravettian.spd <- with(nwiberia.dates.agg[grep("Gravettian", nwiberia.dates.agg$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 10, store_density=TRUE))
 
-title <- paste("Gravettian (N = ", nrow(nwiberia.dates[grep("Gravettian", nwiberia.dates$attribution), ]), ")" )
+title <- paste("Gravettian (N = ", nrow(nwiberia.dates.agg[grep("Gravettian", nwiberia.dates.agg$attribution), ]), ")" )
 
 plot(gravettian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
 ```
     
-  
+ 
+####Figure 4c 
 ```{r Solutrean SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
-solutrean.spd <- with(nwiberia.dates[grep("Solutrean", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+solutrean.spd <- with(nwiberia.dates.agg[grep("Solutrean", nwiberia.dates.agg$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 10, store_density=TRUE))
 
-title <- paste("Solutrean (N = ", nrow(nwiberia.dates[grep("Solutrean", nwiberia.dates$attribution), ]), ")" )
+title <- paste("Solutrean (N = ", nrow(nwiberia.dates.agg[grep("Solutrean", nwiberia.dates.agg$attribution), ]), ")" )
 
 plot(solutrean.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
 ```
   
   
+####Figure 4d  
 ```{r Magdalenian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
-magdalenian.spd <- with(nwiberia.dates[grep("Magdalenian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+magdalenian.spd <- with(nwiberia.dates.agg[grep("Magdalenian", nwiberia.dates.agg$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 10, store_density=TRUE))
 
-title <- paste("Magdalenian (N = ", nrow(nwiberia.dates[grep("Magdalenian", nwiberia.dates$attribution), ]), ")" )
+title <- paste("Magdalenian (N = ", nrow(nwiberia.dates.agg[grep("Magdalenian", nwiberia.dates.agg$attribution), ]), ")" )
 
 plot(magdalenian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
 ```
     
   
+####Figure 4e
 ```{r Azilian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
-azilian.spd <- with(nwiberia.dates[grep("Azilian", nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+azilian.spd <- with(nwiberia.dates.agg[grep("Azilian", nwiberia.dates.agg$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 10, store_density=TRUE))
 
-title <- paste("Azilian (N = ", nrow(nwiberia.dates[grep("Azilian", nwiberia.dates$attribution), ]), ")" )
+title <- paste("Azilian (N = ", nrow(nwiberia.dates.agg[grep("Azilian", nwiberia.dates.agg$attribution), ]), ")" )
 
 plot(azilian.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
 ```
   
   
+####Figure 4f
 ```{r Mesolithic SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
-mesolithic.spd <- with(nwiberia.dates[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 15, store_density=TRUE))
+mesolithic.spd <- with(nwiberia.dates.agg[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates.agg$attribution), ], BchronDensity(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve, numMix = 10, store_density=TRUE))
 
-title <- paste("Mesolithic (N = ", nrow(nwiberia.dates[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates$attribution), ]), ")" )
+title <- paste("Mesolithic (N = ", nrow(nwiberia.dates.agg[grep(paste(c("Asturian", "Meso"), collapse="|"), nwiberia.dates.agg$attribution), ]), ")" )
 
 plot(mesolithic.spd, plotDates =T,  col="red", xlab="age - calibrated years BP", xlim = c(45000, 8000), lty=1, lwd=3, main=title, cex.main = 2, cex.lab = 1.5, cex.axis = 1.3)
 ```  
@@ -210,38 +249,6 @@ ggplot() +
 ```
   
   
-## C14 Calibration and SPD Analyses for all of NW Iberia
-  
-  
-Below are data filtering routines use to merge multiple dates for single proveniences. Dates with high uncertainty (CV>0.05) have already been removed from the dataset.
-  
-#### Data preparation
-  
-Average means and SD for proveniences with multiple dates  
-Eliminate all dates where CV for uncalibrated date >0.05 (90th percentile)
-\
-```{r create c14dates.agg, warning=FALSE, message=FALSE}
-c14.aggdates <- with(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), aggregate(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), by = list(site.prov), FUN = mean))
-
-nwiberia.dates.agg <- with(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), aggregate(na.omit(subset(nwiberia.dates, C14.cv<=0.05 & c("LUP art", "LUP art (Solutrean?)") %in% attribution)), by = list(site.prov), FUN = first))
-
-nwiberia.dates.agg$C14.mean <- round(c14.aggdates$C14.mean)
-nwiberia.dates.agg$C14.sd <- round(c14.aggdates$C14.sd)
-rm(c14.aggdates)
-```
-  
-  
-#### Calibrate dates for use with assemblages if desired
-  
-```{r calibrate dates, warning=FALSE, message=FALSE}
-require(Bchron)
-
-c14calib.agg <- with(nwiberia.dates.agg, BchronCalibrate(ages = C14.mean, ageSds = C14.sd, calCurves = calib.curve))
-
-nwiberia.dates.agg$BP.cal.median <- sapply(1:length(c14calib.agg), function(x) round(median(c14calib.agg[[x]]$ageGrid) ))
-```
-  
-  
 ## **Figure 6:** SPD of entire NW Iberia region with superimposed ice core LOESS curves    
 (1200 x 800 image)  
   
@@ -254,7 +261,7 @@ NWIb.dens <- with(nwiberia.dates.agg, BchronDensity(ages = C14.mean, ageSds = C1
 NWIb.ice.cores <- subset(ice.cores, years.BP<=45000 & years.BP>=5000)
 
 ggplot() + 
-  geom_line(aes(x=NWIb.dens$ageGrid, y=NWIb.dens$densities, color='age', lty='age'), lwd = 1) + 
+  geom_line(aes(x=NWIb.dens$ageGrid, y=as.vector(NWIb.dens$densities), color='age', lty='age'), lwd = 1) + 
   geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=d18O.GISP2.ppt*.00001+.0005, color='gisp2', lty='gisp2'), method='loess', span=.1, se=FALSE) + 
   geom_smooth(data = NWIb.ice.cores, aes(x=years.BP, y=d18O.NGRIP2.ppt*.00001+.0005, color='ngrip2', lty='ngrip2'), method='loess', span=.1, se=FALSE)  + 
   scale_colour_manual(name=NULL, values =c('age'='black','gisp2'='red','ngrip2'='blue'), labels = c('summed radiocarbon probability density  ', 'GISP2 rescaled  ','NGRIP2 rescaled')) + 
