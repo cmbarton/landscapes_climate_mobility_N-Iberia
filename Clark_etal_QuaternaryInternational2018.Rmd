@@ -1,5 +1,5 @@
 ---
-title: "METHODS"
+title: "SI 3 – DATA & METHODS"
 
 subtitle: "Supplementary Information for: Landscapes, Climate Change & Forager Mobility in the Upper Paleolithic of Northern Spain"
 
@@ -81,6 +81,20 @@ ggplot(subset(nwiberia.lithics, period != 'Asturian')) +
 ```
   
   
+## Density plot of retouch frequency for all Upper Paleolithic assemblages. Not included in article.
+
+```{r density plot of retouch frequency, warning=FALSE, message=FALSE, fig.width=9, fig.height=6}
+subset(nwiberia.lithics, period != "Asturian") %>% 
+  ggplot(.) + 
+  geom_density(aes(x=retouch.freq), fill='grey', color=NA, adjust=.5) + 
+  theme_bw(base_size = 20) + 
+  labs(title='Retouch Frequency for\nAll Upper Paleolithic Assemblages', x='retouch frequency') + 
+  geom_vline(xintercept = 0.1, color='blue') + 
+  annotate("text", x=.01, y=9.3, label="curated", size=5, hjust = 0) + 
+  annotate("text", x=.13, y=9.3, label="expedient", size=5, hjust = 0)
+
+```
+  
   
 ## **Figure 3:** All assemblages: distance to modern coast vs elevation vs retouch frequency by period  
 (800 x 1200 image)  
@@ -139,7 +153,7 @@ nwiberia.dates.agg$BP.cal.median <- sapply(1:length(c14calib.agg), function(x) r
   
   
 ## **Figure 4:**  SPD for each U Paleolithic industry   
-(1200 x 600 for each image)  
+(1200 x 500 for each image)  
 
 ####Figure 4a
 ```{r Aurignacian SPD calculation, warning=FALSE, message=FALSE, results="hide", fig.width=6, fig.height=3}
