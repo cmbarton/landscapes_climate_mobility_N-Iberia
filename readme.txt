@@ -8,6 +8,8 @@ Barton, C.M., Clark, G.A., Straus, L.G., 2018. Upper Paleolithic of N Spain - Li
 
 You are welcome to use these data in scientific research but you should cite both the paper and this dataset. 
 
+IMPORTANT CLARIFICATION: The data published here represent the data used for our analysis, extracted from published sources, matched to global DEMs. They should not be considered a gazeteer for geographically relocating individual archaeological sites (though others are welcome to use our data as a starting point for such a gazeteer). Moreover, sites represent single localities, within a region occupied by prehistoric groups, where people occasionally left material remains of their activities and which archaeologists happen to know about. Hence, for the purposes of studies like this one, site locations should be considered to be an imperfect, point sample of a regional occupation.
+
 This package contains:
 
 Clark_etal_QuaternaryInternational2018.Rmd [R Markdown Scripts for R version 3.4.4]
